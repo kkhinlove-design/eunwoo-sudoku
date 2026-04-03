@@ -23,19 +23,23 @@ body {
 
 /* 스도쿠 보드 */
 .sudoku-grid {
-  display: grid;
-  grid-template-columns: repeat(9, 1fr);
+  display: grid !important;
+  grid-template-columns: repeat(9, minmax(0, 1fr)) !important;
   gap: 1px;
-  background: #7c3aed;
+  background-color: #7c3aed;
   border: 3px solid #7c3aed;
   border-radius: 16px;
   overflow: hidden;
+  width: 100%;
   max-width: 420px;
   margin: 0 auto;
 }
 
 .sudoku-cell {
-  aspect-ratio: 1;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+  min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -43,32 +47,33 @@ body {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
-  background: var(--cell-bg);
+  background-color: var(--cell-bg);
   user-select: none;
+  position: relative;
 }
 
 .sudoku-cell:hover {
-  background: var(--cell-selected);
+  background-color: var(--cell-selected);
 }
 
 .sudoku-cell.fixed {
-  background: var(--cell-fixed);
+  background-color: var(--cell-fixed);
   color: #6d28d9;
   cursor: default;
 }
 
 .sudoku-cell.selected {
-  background: var(--cell-selected);
+  background-color: var(--cell-selected);
   box-shadow: inset 0 0 0 2px #7c3aed;
 }
 
 .sudoku-cell.correct {
-  background: var(--cell-correct);
+  background-color: var(--cell-correct);
   color: #059669;
 }
 
 .sudoku-cell.error {
-  background: var(--cell-error);
+  background-color: var(--cell-error);
   color: #dc2626;
   animation: shake 0.4s ease;
 }
@@ -83,17 +88,17 @@ body {
 
 /* 같은 숫자 하이라이트 */
 .sudoku-cell.highlight-same {
-  background: #c4b5fd;
+  background-color: #c4b5fd;
   color: #5b21b6;
 }
 
 /* 같은 행/열/박스 하이라이트 */
 .sudoku-cell.highlight-area {
-  background: #f5f3ff;
+  background-color: #f5f3ff;
 }
 
 .sudoku-cell.highlight-area.fixed {
-  background: #ede9fe;
+  background-color: #ede9fe;
 }
 
 /* 메모 그리드 */
