@@ -1,26 +1,294 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --bg-gradient-from: #fdf2f8;
+  --bg-gradient-to: #ede9fe;
+  --primary: #8b5cf6;
+  --primary-light: #c4b5fd;
+  --accent: #f472b6;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --cell-bg: #ffffff;
+  --cell-fixed: #f3e8ff;
+  --cell-error: #fecaca;
+  --cell-correct: #d1fae5;
+  --cell-selected: #ddd6fe;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(135deg, var(--bg-gradient-from), var(--bg-gradient-to));
+  min-height: 100vh;
+  font-family: 'Pretendard', sans-serif;
+}
+
+/* 스도쿠 보드 */
+.sudoku-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 1px;
+  background: #7c3aed;
+  border: 3px solid #7c3aed;
+  border-radius: 16px;
+  overflow: hidden;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.sudoku-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: var(--cell-bg);
+  user-select: none;
+}
+
+.sudoku-cell:hover {
+  background: var(--cell-selected);
+}
+
+.sudoku-cell.fixed {
+  background: var(--cell-fixed);
+  color: #6d28d9;
+  cursor: default;
+}
+
+.sudoku-cell.selected {
+  background: var(--cell-selected);
+  box-shadow: inset 0 0 0 2px #7c3aed;
+}
+
+.sudoku-cell.correct {
+  background: var(--cell-correct);
+  color: #059669;
+}
+
+.sudoku-cell.error {
+  background: var(--cell-error);
+  color: #dc2626;
+  animation: shake 0.4s ease;
+}
+
+.sudoku-cell.border-r-thick {
+  border-right: 2px solid #7c3aed;
+}
+
+.sudoku-cell.border-b-thick {
+  border-bottom: 2px solid #7c3aed;
+}
+
+/* 같은 숫자 하이라이트 */
+.sudoku-cell.highlight-same {
+  background: #c4b5fd;
+  color: #5b21b6;
+}
+
+/* 같은 행/열/박스 하이라이트 */
+.sudoku-cell.highlight-area {
+  background: #f5f3ff;
+}
+
+.sudoku-cell.highlight-area.fixed {
+  background: #ede9fe;
+}
+
+/* 메모 그리드 */
+.memo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  width: 100%;
+  height: 100%;
+  padding: 1px;
+}
+
+.memo-num {
+  font-size: 0.45rem;
+  color: #8b5cf6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* 도구 버튼 */
+.tool-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: white;
+  border: 2px solid #ede9fe;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.tool-btn:hover {
+  border-color: #c4b5fd;
+  transform: translateY(-1px);
+}
+
+.tool-btn-active {
+  background: #7c3aed;
+  color: white;
+  border-color: #7c3aed;
+}
+
+/* 숫자 패드 */
+.num-pad {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 6px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.num-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: white;
+  color: #7c3aed;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
+  gap: 0;
+}
+
+.num-btn-number {
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.num-btn-count {
+  font-size: 0.6rem;
+  font-weight: 600;
+  opacity: 0.5;
+}
+
+.num-btn:hover {
+  background: #7c3aed;
+  color: white;
+  transform: scale(1.1);
+}
+
+.num-btn:active {
+  transform: scale(0.95);
+}
+
+.num-btn-selected {
+  background: #7c3aed;
+  color: white;
+}
+
+.num-btn-done {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* 애니메이션 */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@keyframes bounce-in {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.4s ease forwards;
+}
+
+/* 프로그레스 바 */
+.progress-bar {
+  height: 12px;
+  border-radius: 6px;
+  background: #e9d5ff;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #8b5cf6, #f472b6);
+  transition: width 0.5s ease;
+}
+
+/* 카드 */
+.game-card {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.1);
+  border: 2px solid #ede9fe;
+}
+
+/* 버튼 */
+.btn-primary {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #f472b6, #ec4899);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(244, 114, 182, 0.3);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(244, 114, 182, 0.4);
+}
+
+/* confetti */
+.confetti-piece {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  animation: confetti-fall 3s ease-in forwards;
+  z-index: 1000;
 }
