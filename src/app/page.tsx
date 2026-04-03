@@ -256,6 +256,20 @@ export default function Home() {
                         </div>
                       </div>
                     )}
+
+                    {/* 레벨업 바 */}
+                    <div className="mt-2">
+                      <div className="flex items-center gap-1 text-xs text-purple-400 mb-1">
+                        <span className="font-bold text-purple-600">Lv.{Math.min(p.current_level, 99)}</span>
+                        <div className="progress-bar flex-1" style={{ height: '5px' }}>
+                          <div
+                            className="progress-fill"
+                            style={{ width: `${((p.games_played % 3) / 3) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-purple-400">Lv.{Math.min(p.current_level + 1, 99)}</span>
+                      </div>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -318,6 +332,23 @@ export default function Home() {
                 </div>
               </div>
             )}
+
+            {/* 레벨업 바 */}
+            <div className="mt-3 px-4">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-bold text-purple-600">Lv.{Math.min(player.current_level, 99)}</span>
+                <div className="progress-bar flex-1" style={{ height: '8px' }}>
+                  <div
+                    className="progress-fill"
+                    style={{ width: `${((player.games_played % 3) / 3) * 100}%` }}
+                  />
+                </div>
+                <span className="text-sm font-bold text-purple-400">Lv.{Math.min(player.current_level + 1, 99)}</span>
+              </div>
+              <div className="text-xs text-purple-400 text-center">
+                다음 레벨까지 {3 - (player.games_played % 3)}게임
+              </div>
+            </div>
           </div>
 
           {/* 메뉴 */}
@@ -330,20 +361,20 @@ export default function Home() {
               🏠 방 만들기
             </button>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                 onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
                 placeholder="방 코드 입력"
-                className="flex-1 px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none text-center font-bold text-lg uppercase"
+                className="w-full sm:flex-1 px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none text-center font-bold text-lg uppercase"
                 maxLength={4}
               />
               <button
                 onClick={handleJoinRoom}
                 disabled={!roomCode.trim()}
-                className="btn-secondary disabled:opacity-50 px-6"
+                className="btn-secondary disabled:opacity-50 w-full sm:w-auto px-6"
               >
                 입장!
               </button>

@@ -80,9 +80,9 @@ function PlayContent() {
       total_score: (player as unknown as Record<string, number>).total_score + totalScore,
     };
 
-    // 레벨업: 3게임마다
-    if ((updates.games_played as number) % 3 === 0) {
-      updates.current_level = player.current_level + 1;
+    // 레벨업: 3게임마다 (최대 99)
+    if ((updates.games_played as number) % 3 === 0 && player.current_level < 99) {
+      updates.current_level = Math.min(player.current_level + 1, 99);
     }
 
     // 최고 기록 업데이트

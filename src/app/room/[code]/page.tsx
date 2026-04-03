@@ -7,6 +7,7 @@ import { generatePuzzle } from '@/lib/sudoku';
 import SudokuBoard from '@/components/SudokuBoard';
 import Timer from '@/components/Timer';
 import Confetti from '@/components/Confetti';
+import { startBGM, stopBGM } from '@/lib/sounds';
 
 interface Player {
   id: string;
@@ -67,6 +68,17 @@ function RoomContent({ params }: { params: Promise<{ code: string }> }) {
   const [completionTime, setCompletionTime] = useState(0);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [bgmEnabled, setBgmEnabled] = useState(false);
+
+  // BGM 제어
+  useEffect(() => {
+    if (bgmEnabled && gameStarted && !completed && !winner) {
+      startBGM();
+    } else {
+      stopBGM();
+    }
+    return () => stopBGM();
+  }, [bgmEnabled, gameStarted, completed, winner]);
 
   // roomId를 안정적인 ref로 관리 (구독 끊김 방지)
   const roomIdRef = useRef<string | null>(null);
@@ -466,9 +478,19 @@ function RoomContent({ params }: { params: Promise<{ code: string }> }) {
       <div className="max-w-lg mx-auto">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-bold text-purple-500">방: {room.code}</span>
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-600">
-            {DIFFICULTY_LABELS[room.difficulty]}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setBgmEnabled(prev => !prev)}
+              className={`px-2 py-1 rounded-full text-xs font-bold transition-all ${
+                bgmEnabled ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-400'
+              }`}
+            >
+              {bgmEnabled ? '🔊' : '🔇'}
+            </button>
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-600">
+              {DIFFICULTY_LABELS[room.difficulty]}
+            </span>
+          </div>
           <Timer running={!completed} />
         </div>
 

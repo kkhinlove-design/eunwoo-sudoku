@@ -65,6 +65,24 @@ const CELLS_TO_REMOVE: Record<string, number> = {
   hard: 50,
 };
 
+// 각 숫자(1~9)가 퍼즐에서 최소 1개는 빈칸인지 확인
+function hasBlankForEveryNumber(puzzle: Grid, solution: Grid): boolean {
+  for (let num = 1; num <= 9; num++) {
+    let hasBlank = false;
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (solution[r][c] === num && puzzle[r][c] === 0) {
+          hasBlank = true;
+          break;
+        }
+      }
+      if (hasBlank) break;
+    }
+    if (!hasBlank) return false;
+  }
+  return true;
+}
+
 // 스도쿠 퍼즐 생성
 export function generatePuzzle(difficulty: string = 'easy'): {
   puzzle: Grid;
@@ -73,19 +91,22 @@ export function generatePuzzle(difficulty: string = 'easy'): {
   const solution = createEmptyGrid();
   fillGrid(solution);
 
-  // 깊은 복사로 퍼즐 생성
-  const puzzle: Grid = solution.map((row) => [...row]);
-
-  // 난이도에 따라 셀 제거
   const toRemove = CELLS_TO_REMOVE[difficulty] || 30;
-  const positions = shuffle(
-    Array.from({ length: 81 }, (_, i) => [Math.floor(i / 9), i % 9])
-  );
 
-  for (let i = 0; i < toRemove; i++) {
-    const [row, col] = positions[i];
-    puzzle[row][col] = 0;
-  }
+  // 모든 숫자가 최소 1개는 빈칸이 되도록 반복 생성
+  let puzzle: Grid;
+  let attempts = 0;
+  do {
+    puzzle = solution.map((row) => [...row]);
+    const positions = shuffle(
+      Array.from({ length: 81 }, (_, i) => [Math.floor(i / 9), i % 9])
+    );
+    for (let i = 0; i < toRemove; i++) {
+      const [row, col] = positions[i];
+      puzzle[row][col] = 0;
+    }
+    attempts++;
+  } while (!hasBlankForEveryNumber(puzzle, solution) && attempts < 50);
 
   return { puzzle, solution };
 }

@@ -157,11 +157,13 @@ body {
 .num-pad {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
-  gap: 8px;
+  gap: clamp(4px, 1.5vw, 10px);
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  padding: 0 4px;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .num-btn {
@@ -315,7 +317,7 @@ body {
 /* ─── 반응형 ─── */
 
 /* 모바일 (작은 화면) */
-@media (max-width: 400px) {
+@media (max-width: 480px) {
   .sudoku-grid {
     max-width: 100%;
     border-radius: 12px;
@@ -323,7 +325,7 @@ body {
 
   .sudoku-cell {
     min-height: 28px;
-    font-size: 1rem;
+    font-size: clamp(0.85rem, 4vw, 1.2rem);
   }
 
   .memo-num {
@@ -331,23 +333,38 @@ body {
   }
 
   .num-pad {
-    gap: 4px;
+    gap: 3px;
+    padding: 0;
+    max-width: 100%;
   }
 
   .num-btn {
-    border-radius: 10px;
-    border-width: 2px;
+    border-radius: 8px;
+    border-width: 1.5px;
+    aspect-ratio: 1 / 1.1;
+  }
+
+  .num-btn-number {
+    font-size: clamp(1rem, 5vw, 1.5rem);
+  }
+
+  .num-btn-count {
+    font-size: 0.55rem;
   }
 
   .tool-btn {
-    padding: 8px 14px;
-    min-height: 50px;
-    border-radius: 12px;
+    padding: 6px 12px;
+    min-height: 46px;
+    border-radius: 10px;
+  }
+
+  .tool-btn .text-xs {
+    font-size: 0.6rem;
   }
 
   .game-card {
-    padding: 16px;
-    border-radius: 16px;
+    padding: 14px;
+    border-radius: 14px;
   }
 }
 
