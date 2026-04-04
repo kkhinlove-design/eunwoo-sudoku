@@ -359,6 +359,81 @@ function RoomContent({ params }: { params: Promise<{ code: string }> }) {
     }
   }, [player]);
 
+  // 게임 오버 처리 (실수 5개)
+  const handleGameOver = useCallback(async () => {
+    const rId = roomIdRef.current;
+    if (!rId || !player) return;
+
+    // 이 플레이어를 finished 처리 (패배)
+    await supabase.from('room_players').update({
+      finished_at: new Date().toISOString(),
+    }).eq('room_id', rId).eq('player_id', player.id);
+
+    // 모든 참가자가 끝났는지 확인
+    const { data: allRp } = await supabase
+      .from('room_players')
+      .select('*')
+      .eq('room_id', rId);
+
+    if (!allRp) return;
+
+    const allFinished = allRp.every(rp => {
+      if (rp.player_id === player.id) return true; // 방금 업데이트한 본인
+      return rp.finished_at !== null;
+    });
+
+    // 이미 승자가 있으면(누가 클리어함) 추가 처리 불필요
+    const hasWinner = allRp.some(rp => rp.is_winner);
+    if (hasWinner) return;
+
+    if (allFinished) {
+      // 모두 게임 오버 → 진행률 순 랭킹
+      const sorted = [...allRp].map(rp => ({
+        ...rp,
+        completion_pct: rp.player_id === player.id
+          ? (roomPlayers.find(r => r.player_id === player.id)?.completion_pct ?? rp.completion_pct)
+          : rp.completion_pct,
+      })).sort((a, b) => b.completion_pct - a.completion_pct);
+
+      // 1등을 승자로
+      const winnerId = sorted[0].player_id;
+      await supabase.from('room_players').update({
+        is_winner: true,
+      }).eq('room_id', rId).eq('player_id', winnerId);
+
+      await supabase.from('rooms').update({ status: 'finished' }).eq('id', rId);
+
+      // 모든 플레이어 기록 저장
+      const currentRoom = roomRef.current;
+      const diff = currentRoom?.difficulty || 'easy';
+
+      for (const rp of sorted) {
+        const isWin = rp.player_id === winnerId;
+        const { data: p } = await supabase
+          .from('players')
+          .select('games_played, games_won, total_score')
+          .eq('id', rp.player_id)
+          .single();
+
+        if (p) {
+          await supabase.from('players').update({
+            games_played: p.games_played + 1,
+            ...(isWin ? { games_won: p.games_won + 1 } : {}),
+          }).eq('id', rp.player_id);
+        }
+
+        await supabase.from('game_history').insert({
+          player_id: rp.player_id,
+          room_id: rId,
+          difficulty: diff,
+          completion_time: null,
+          is_winner: isWin,
+          score: 0,
+        });
+      }
+    }
+  }, [player, roomPlayers]);
+
   // 방 코드 복사
   const copyCode = () => {
     if (!room) return;
@@ -389,14 +464,20 @@ function RoomContent({ params }: { params: Promise<{ code: string }> }) {
 
   // 승자 발표 화면
   if (winner) {
+    const allGameOver = roomPlayers.every(rp => rp.completion_pct < 100);
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         {completed && <Confetti />}
         <div className="game-card w-full max-w-md text-center">
-          <div className="text-6xl mb-4">🏆</div>
+          <div className="text-6xl mb-4">{allGameOver ? '😵' : '🏆'}</div>
           <h2 className="text-3xl font-bold text-purple-700 mb-2">
-            {winner === player.name ? '내가 이겼다!' : `${winner}(이)가 이겼어!`}
+            {allGameOver
+              ? '모두 게임 오버!'
+              : winner === player.name ? '내가 이겼다!' : `${winner}(이)가 이겼어!`}
           </h2>
+          {allGameOver && (
+            <p className="text-sm text-gray-500 mb-2">진행률이 가장 높은 사람이 1등!</p>
+          )}
           <div className="mt-4 space-y-2">
             {roomPlayers
               .sort((a, b) => b.completion_pct - a.completion_pct)
@@ -548,6 +629,7 @@ function RoomContent({ params }: { params: Promise<{ code: string }> }) {
           solution={room.solution}
           onProgress={handleProgress}
           onComplete={handleComplete}
+          onGameOver={handleGameOver}
         />
       </div>
     </div>
