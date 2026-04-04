@@ -69,7 +69,7 @@ export default function SudokuBoard({ puzzle, solution, onProgress, onComplete, 
   // 새 기능: 실수 카운트
   const [mistakes, setMistakes] = useState(0);
   const [gameOver, setGameOver] = useState(false);
-  const MAX_MISTAKES = 5;
+  const MAX_MISTAKES = 7;
 
   // 남은 숫자 카운트
   const getNumberCounts = useCallback(() => {

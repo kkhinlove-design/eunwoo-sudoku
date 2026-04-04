@@ -258,12 +258,12 @@ function PlayContent() {
           <div className="text-6xl mb-4">😢</div>
           <h2 className="text-3xl font-bold text-red-500 mb-2">게임 오버</h2>
           <p className="text-lg text-gray-500 mb-6">
-            실수 5개로 {player.name}(이)가 패배했어요...
+            실수 7개로 {player.name}(이)가 패배했어요...
           </p>
 
           <div className="bg-red-50 rounded-xl p-4 mb-6">
             <div className="text-sm text-red-400">실수</div>
-            <div className="text-2xl font-bold text-red-600">5 / 5</div>
+            <div className="text-2xl font-bold text-red-600">7 / 7</div>
           </div>
 
           <div className="flex flex-col gap-2">
