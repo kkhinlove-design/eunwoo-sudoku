@@ -16,6 +16,7 @@ interface SudokuBoardProps {
   solution: Grid;
   onProgress?: (grid: Grid, pct: number) => void;
   onComplete?: (timeSeconds: number) => void;
+  onGameOver?: (mistakes: number) => void;
 }
 
 function serializeMemos(memos: MemoGrid): number[][][] {
@@ -44,7 +45,7 @@ function checkLineCompletion(grid: Grid, solution: Grid, row: number, col: numbe
   return rowComplete || colComplete || boxComplete;
 }
 
-export default function SudokuBoard({ puzzle, solution, onProgress, onComplete }: SudokuBoardProps) {
+export default function SudokuBoard({ puzzle, solution, onProgress, onComplete, onGameOver }: SudokuBoardProps) {
   const [grid, setGrid] = useState<Grid>(() => puzzle.map(row => [...row]));
   const [selected, setSelected] = useState<[number, number] | null>(null);
   const [errors, setErrors] = useState<Set<string>>(new Set());
@@ -67,6 +68,7 @@ export default function SudokuBoard({ puzzle, solution, onProgress, onComplete }
 
   // 새 기능: 실수 카운트
   const [mistakes, setMistakes] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
   const MAX_MISTAKES = 5;
 
   // 남은 숫자 카운트
@@ -125,7 +127,7 @@ export default function SudokuBoard({ puzzle, solution, onProgress, onComplete }
 
   // 숫자 입력
   const handleInput = useCallback((num: number) => {
-    if (!selected || completed) return;
+    if (!selected || completed || gameOver) return;
     const [row, col] = selected;
     if (puzzle[row][col] !== 0) return;
 
@@ -174,8 +176,14 @@ export default function SudokuBoard({ puzzle, solution, onProgress, onComplete }
       newGrid[row][col] = num;
       setErrors(prev => new Set(prev).add(key));
       setCorrects(prev => { const n = new Set(prev); n.delete(key); return n; });
-      setMistakes(prev => prev + 1);
+      const newMistakes = mistakes + 1;
+      setMistakes(newMistakes);
       playErrorSound();
+      if (newMistakes >= MAX_MISTAKES) {
+        setGameOver(true);
+        onGameOver?.(newMistakes);
+        return;
+      }
       setTimeout(() => {
         setErrors(prev => { const n = new Set(prev); n.delete(key); return n; });
       }, 1000);
@@ -198,7 +206,7 @@ export default function SudokuBoard({ puzzle, solution, onProgress, onComplete }
     } else if (solution[row][col] === num) {
       playTapSound();
     }
-  }, [selected, grid, puzzle, solution, completed, memoMode, startTime, calcProgress, onProgress, onComplete, saveHistory]);
+  }, [selected, grid, puzzle, solution, completed, gameOver, mistakes, memoMode, startTime, calcProgress, onProgress, onComplete, onGameOver, saveHistory]);
 
   // 실행취소
   const handleUndo = useCallback(() => {
@@ -211,7 +219,7 @@ export default function SudokuBoard({ puzzle, solution, onProgress, onComplete }
 
   // 힌트
   const handleHint = useCallback(() => {
-    if (hintsUsed >= MAX_HINTS || completed) return;
+    if (hintsUsed >= MAX_HINTS || completed || gameOver) return;
 
     // 빈 셀 중 하나를 랜덤으로 채우기
     const emptyCells: [number, number][] = [];
@@ -261,7 +269,7 @@ export default function SudokuBoard({ puzzle, solution, onProgress, onComplete }
     } else {
       playTapSound();
     }
-  }, [hintsUsed, completed, grid, solution, selected, saveHistory, calcProgress, startTime, onProgress, onComplete]);
+  }, [hintsUsed, completed, gameOver, grid, solution, selected, saveHistory, calcProgress, startTime, onProgress, onComplete]);
 
   // 키보드 입력
   useEffect(() => {
@@ -340,7 +348,27 @@ export default function SudokuBoard({ puzzle, solution, onProgress, onComplete }
       </div>
 
       {/* 스도쿠 그리드 */}
-      <div className="sudoku-grid">
+      <div className="sudoku-grid" style={{ position: 'relative' }}>
+        {gameOver && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(0,0,0,0.6)',
+            borderRadius: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10,
+            animation: 'fadeIn 0.3s ease',
+          }}>
+            <div style={{ fontSize: '3rem', marginBottom: '8px' }}>😢</div>
+            <div style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 'bold' }}>게임 오버</div>
+            <div style={{ color: '#f87171', fontSize: '0.9rem', marginTop: '4px' }}>
+              실수 {MAX_MISTAKES}/{MAX_MISTAKES}
+            </div>
+          </div>
+        )}
         {grid.map((row, ri) =>
           row.map((cell, ci) => (
             <div

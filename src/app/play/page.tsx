@@ -31,19 +31,20 @@ function PlayContent() {
   const [puzzle, setPuzzle] = useState<number[][] | null>(null);
   const [solution, setSolution] = useState<number[][] | null>(null);
   const [completed, setCompleted] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
   const [completionTime, setCompletionTime] = useState(0);
   const [score, setScore] = useState(0);
   const [bgmEnabled, setBgmEnabled] = useState(false);
 
   // BGM 제어
   useEffect(() => {
-    if (bgmEnabled && difficulty && !completed) {
+    if (bgmEnabled && difficulty && !completed && !gameOver) {
       startBGM();
     } else {
       stopBGM();
     }
     return () => stopBGM();
-  }, [bgmEnabled, difficulty, completed]);
+  }, [bgmEnabled, difficulty, completed, gameOver]);
 
   useEffect(() => {
     if (!playerId) { router.push('/'); return; }
@@ -59,6 +60,7 @@ function PlayContent() {
     setPuzzle(p);
     setSolution(s);
     setCompleted(false);
+    setGameOver(false);
   };
 
   const handleComplete = useCallback(async (timeSeconds: number) => {
@@ -101,6 +103,27 @@ function PlayContent() {
       completion_time: timeSeconds,
       is_winner: true,
       score: totalScore,
+    });
+  }, [difficulty, player]);
+
+  const handleGameOver = useCallback(async () => {
+    setGameOver(true);
+    stopBGM();
+
+    if (!player) return;
+
+    // 게임 수만 증가 (승리 아님)
+    await supabase.from('players').update({
+      games_played: player.games_played + 1,
+    }).eq('id', player.id);
+
+    // 게임 기록 저장 (패배)
+    await supabase.from('game_history').insert({
+      player_id: player.id,
+      difficulty,
+      completion_time: Math.round((Date.now() - Date.now()) / 1000),
+      is_winner: false,
+      score: 0,
     });
   }, [difficulty, player]);
 
@@ -227,6 +250,41 @@ function PlayContent() {
     );
   }
 
+  // 게임 오버 화면
+  if (gameOver) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="game-card w-full max-w-md text-center animate-bounce-in">
+          <div className="text-6xl mb-4">😢</div>
+          <h2 className="text-3xl font-bold text-red-500 mb-2">게임 오버</h2>
+          <p className="text-lg text-gray-500 mb-6">
+            실수 5개로 {player.name}(이)가 패배했어요...
+          </p>
+
+          <div className="bg-red-50 rounded-xl p-4 mb-6">
+            <div className="text-sm text-red-400">실수</div>
+            <div className="text-2xl font-bold text-red-600">5 / 5</div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <button onClick={() => startGame(difficulty)} className="btn-primary w-full">
+              다시 도전! 💪
+            </button>
+            <button onClick={() => setDifficulty(null)} className="btn-secondary w-full">
+              난이도 변경
+            </button>
+            <button
+              onClick={() => router.push('/')}
+              className="text-purple-400 hover:text-purple-600 mt-1"
+            >
+              ← 로비로
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // 게임 플레이 화면
   return (
     <div className="min-h-screen p-2 sm:p-4 pt-4 sm:pt-6">
@@ -253,7 +311,7 @@ function PlayContent() {
               {DIFFICULTY_LABELS[difficulty]}
             </span>
           </div>
-          <Timer running={!completed} />
+          <Timer running={!completed && !gameOver} />
         </div>
 
         {/* 레벨 바 */}
@@ -274,6 +332,7 @@ function PlayContent() {
             puzzle={puzzle}
             solution={solution}
             onComplete={handleComplete}
+            onGameOver={handleGameOver}
           />
         )}
       </div>
