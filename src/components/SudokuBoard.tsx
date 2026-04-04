@@ -321,7 +321,7 @@ export default function SudokuBoard({ puzzle, solution, onProgress, onComplete }
   const numberCounts = getNumberCounts();
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3" style={{ maxWidth: '100%', overflow: 'hidden' }}>
       {/* 상태 바: 실수 카운트 + 힌트 잔여 */}
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-1 text-sm">
