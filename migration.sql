@@ -8,6 +8,7 @@ CREATE TABLE players (
   avatar_emoji TEXT DEFAULT '😊',
   games_played INT DEFAULT 0,
   games_won INT DEFAULT 0,
+  best_time_beginner INT,
   best_time_easy INT,
   best_time_medium INT,
   best_time_hard INT,

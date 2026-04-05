@@ -46,6 +46,7 @@ function generateRoomCode(): string {
 }
 
 const DIFFICULTY_LABELS: Record<string, string> = {
+  beginner: '입문 🌱',
   easy: '쉬움 ⭐',
   medium: '보통 ⭐⭐',
   hard: '어려움 ⭐⭐⭐',
@@ -306,7 +307,7 @@ function RoomContent({ params }: { params: Promise<{ code: string }> }) {
 
     const currentRoom = roomRef.current;
     const diff = currentRoom?.difficulty || 'easy';
-    const diffBonus = diff === 'easy' ? 150 : diff === 'medium' ? 300 : 500;
+    const diffBonus = diff === 'beginner' ? 80 : diff === 'easy' ? 150 : diff === 'medium' ? 300 : 500;
     const timeBonus = Math.max(0, 300 - timeSeconds);
     const totalScore = diffBonus + timeBonus;
 
@@ -547,7 +548,7 @@ function RoomContent({ params }: { params: Promise<{ code: string }> }) {
             <div className="mb-4">
               <p className="text-sm text-purple-400 mb-2 font-semibold">난이도 선택</p>
               <div className="flex gap-2 justify-center">
-                {(['easy', 'medium', 'hard'] as const).map(diff => (
+                {(['beginner', 'easy', 'medium', 'hard'] as const).map(diff => (
                   <button
                     key={diff}
                     onClick={() => setDifficulty(diff)}

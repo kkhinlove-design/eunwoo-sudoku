@@ -60,6 +60,7 @@ function fillGrid(grid: Grid): boolean {
 
 // 난이도별 제거할 셀 수
 const CELLS_TO_REMOVE: Record<string, number> = {
+  beginner: 20,
   easy: 30,
   medium: 40,
   hard: 50,

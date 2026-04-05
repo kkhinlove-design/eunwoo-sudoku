@@ -10,12 +10,14 @@ import Confetti from '@/components/Confetti';
 import { startBGM, stopBGM } from '@/lib/sounds';
 
 const DIFFICULTY_LABELS: Record<string, string> = {
+  beginner: '입문 🌱',
   easy: '쉬움 ⭐',
   medium: '보통 ⭐⭐',
   hard: '어려움 ⭐⭐⭐',
 };
 
 const DIFFICULTY_COLORS: Record<string, string> = {
+  beginner: 'bg-blue-100 text-blue-700',
   easy: 'bg-green-100 text-green-700',
   medium: 'bg-yellow-100 text-yellow-700',
   hard: 'bg-red-100 text-red-700',
@@ -68,7 +70,7 @@ function PlayContent() {
     setCompletionTime(timeSeconds);
 
     // 점수 계산: 난이도 보너스 + 시간 보너스
-    const diffBonus = difficulty === 'easy' ? 100 : difficulty === 'medium' ? 200 : 300;
+    const diffBonus = difficulty === 'beginner' ? 50 : difficulty === 'easy' ? 100 : difficulty === 'medium' ? 200 : 300;
     const timeBonus = Math.max(0, 300 - timeSeconds);
     const totalScore = diffBonus + timeBonus;
     setScore(totalScore);
@@ -139,7 +141,7 @@ function PlayContent() {
           <p className="text-purple-400 mb-6">난이도를 골라봐!</p>
 
           <div className="flex flex-col gap-3">
-            {(['easy', 'medium', 'hard'] as const).map(diff => (
+            {(['beginner', 'easy', 'medium', 'hard'] as const).map(diff => (
               <button
                 key={diff}
                 onClick={() => startGame(diff)}
