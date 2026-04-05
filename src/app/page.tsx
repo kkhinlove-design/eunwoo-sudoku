@@ -36,6 +36,8 @@ export default function Home() {
   const [roomCode, setRoomCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
 
   // 등록된 플레이어 목록 로드
   const loadAllPlayers = async () => {
@@ -124,6 +126,39 @@ export default function Home() {
     loadAllPlayers();
   };
 
+  // 이름 수정
+  const handleRenamePlayer = async (p: Player) => {
+    const newName = editName.trim();
+    if (!newName || newName === p.name) {
+      setEditingPlayer(null);
+      return;
+    }
+
+    // 중복 이름 확인
+    const { data: existing } = await supabase
+      .from('players')
+      .select('id')
+      .eq('name', newName)
+      .neq('id', p.id)
+      .single();
+
+    if (existing) {
+      setError('이미 사용 중인 이름이에요!');
+      return;
+    }
+
+    await supabase.from('players').update({ name: newName }).eq('id', p.id);
+
+    // 현재 로그인된 플레이어면 상태도 갱신
+    if (player?.id === p.id) {
+      setPlayer({ ...player, name: newName });
+    }
+
+    setEditingPlayer(null);
+    setError('');
+    loadAllPlayers();
+  };
+
   // 방 만들기
   const handleCreateRoom = () => {
     if (!player) return;
@@ -190,7 +225,7 @@ export default function Home() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                placeholder="새 이름을 입력해줘! (예: 은우)"
+                placeholder="새 이름을 입력해줘! (예: 고은우)"
                 className="w-full px-4 py-3 rounded-xl border-2 border-purple-200 focus:border-purple-500 focus:outline-none text-center text-lg font-semibold"
                 maxLength={10}
               />
@@ -293,14 +328,49 @@ export default function Home() {
                       </div>
                     </div>
                   </button>
-                  {/* 삭제 버튼 */}
-                  <button
-                    onClick={(e) => handleDeletePlayer(e, p)}
-                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-red-100 text-red-400 hover:bg-red-200 hover:text-red-600 flex items-center justify-center text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity"
-                    title={`${p.name} 삭제`}
-                  >
-                    ✕
-                  </button>
+                  {/* 수정/삭제 버튼 */}
+                  {editingPlayer === p.id ? (
+                    <div className="absolute top-2 right-2 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleRenamePlayer(p)}
+                        className="w-24 px-2 py-1 rounded-lg border-2 border-purple-300 focus:border-purple-500 focus:outline-none text-sm font-semibold text-center"
+                        maxLength={10}
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => handleRenamePlayer(p)}
+                        className="w-7 h-7 rounded-full bg-green-100 text-green-600 hover:bg-green-200 flex items-center justify-center text-sm font-bold"
+                      >
+                        ✓
+                      </button>
+                      <button
+                        onClick={() => setEditingPlayer(null)}
+                        className="w-7 h-7 rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 flex items-center justify-center text-sm font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setEditingPlayer(p.id); setEditName(p.name); setError(''); }}
+                        className="w-7 h-7 rounded-full bg-purple-100 text-purple-400 hover:bg-purple-200 hover:text-purple-600 flex items-center justify-center text-sm font-bold"
+                        title={`${p.name} 이름 수정`}
+                      >
+                        ✎
+                      </button>
+                      <button
+                        onClick={(e) => handleDeletePlayer(e, p)}
+                        className="w-7 h-7 rounded-full bg-red-100 text-red-400 hover:bg-red-200 hover:text-red-600 flex items-center justify-center text-sm font-bold"
+                        title={`${p.name} 삭제`}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
                   </div>
                 ))}
               </div>
