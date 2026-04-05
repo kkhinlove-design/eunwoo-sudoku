@@ -177,6 +177,12 @@ export default function Home() {
     router.push(`/play?player=${player.id}`);
   };
 
+  // AI 대결
+  const handleAIPlay = () => {
+    if (!player) return;
+    router.push(`/play-ai?player=${player.id}`);
+  };
+
   // 로그아웃
   const handleLogout = () => {
     setPlayer(null);
@@ -456,6 +462,10 @@ export default function Home() {
           <div className="flex flex-col gap-3">
             <button onClick={handleSoloPlay} className="btn-primary w-full text-lg">
               🎮 혼자 연습하기
+            </button>
+
+            <button onClick={handleAIPlay} className="w-full text-lg py-3 rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:from-pink-600 hover:to-purple-600 transition-all hover:scale-105">
+              🤖 AI 대결하기
             </button>
 
             <button onClick={handleCreateRoom} className="btn-secondary w-full text-lg">
