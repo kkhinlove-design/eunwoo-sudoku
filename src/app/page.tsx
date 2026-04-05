@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { computeLevel, getCurrentMilestone } from '@/lib/level';
 
 const AVATARS = ['😊', '🦊', '🐱', '🐶', '🐰', '🐼', '🦁', '🐸', '🐵', '🦄', '🐯', '🐮'];
 
@@ -278,9 +279,15 @@ export default function Home() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-purple-700 text-base">{p.name}</span>
-                          <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full font-semibold">
-                            Lv.{p.current_level}
-                          </span>
+                          {(() => {
+                            const info = computeLevel(p.games_won);
+                            const ms = getCurrentMilestone(info.level);
+                            return (
+                              <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full font-semibold">
+                                {ms ? `${ms.badge} ` : ''}Lv.{info.level}
+                              </span>
+                            );
+                          })()}
                         </div>
                         <div className="flex items-center gap-3 mt-1 text-xs text-purple-400">
                           <span>{p.games_played}게임</span>
@@ -321,18 +328,23 @@ export default function Home() {
                     )}
 
                     {/* 레벨업 바 */}
+                    {(() => {
+                      const lvInfo = computeLevel(p.games_won);
+                      return (
                     <div className="mt-2">
                       <div className="flex items-center gap-1 text-xs text-purple-400 mb-1">
-                        <span className="font-bold text-purple-600">Lv.{Math.min(p.current_level, 99)}</span>
+                        <span className="font-bold text-purple-600">Lv.{lvInfo.level}</span>
                         <div className="progress-bar flex-1" style={{ height: '5px' }}>
                           <div
                             className="progress-fill"
-                            style={{ width: `${((p.games_played % 3) / 3) * 100}%` }}
+                            style={{ width: `${(lvInfo.winsInLevel / lvInfo.winsForNext) * 100}%` }}
                           />
                         </div>
-                        <span className="text-purple-400">Lv.{Math.min(p.current_level + 1, 99)}</span>
+                        <span className="text-purple-400">Lv.{lvInfo.level + 1}</span>
                       </div>
                     </div>
+                      );
+                    })()}
                   </button>
                   {/* 수정/삭제 버튼 */}
                   {editingPlayer === p.id ? (
@@ -396,8 +408,17 @@ export default function Home() {
           <div className="text-center mb-5">
             <div className="text-5xl mb-2">{player.avatar_emoji}</div>
             <h2 className="text-2xl font-bold text-purple-700">{player.name}</h2>
+            {(() => {
+              const myInfo = computeLevel(player.games_won);
+              const myMilestone = getCurrentMilestone(myInfo.level);
+              return myMilestone ? (
+                <div className="text-sm font-bold text-yellow-600 mt-1">
+                  {myMilestone.badge} {myMilestone.title}
+                </div>
+              ) : null;
+            })()}
             <div className="flex justify-center gap-3 mt-2 text-sm text-purple-400">
-              <span>Lv.{player.current_level}</span>
+              <span>Lv.{computeLevel(player.games_won).level}</span>
               <span>|</span>
               <span>{player.games_played}게임</span>
               <span>|</span>
@@ -441,21 +462,26 @@ export default function Home() {
             )}
 
             {/* 레벨업 바 */}
-            <div className="mt-3 px-4">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-bold text-purple-600">Lv.{Math.min(player.current_level, 99)}</span>
-                <div className="progress-bar flex-1" style={{ height: '8px' }}>
-                  <div
-                    className="progress-fill"
-                    style={{ width: `${((player.games_played % 3) / 3) * 100}%` }}
-                  />
+            {(() => {
+              const myLvInfo = computeLevel(player.games_won);
+              return (
+              <div className="mt-3 px-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-bold text-purple-600">Lv.{myLvInfo.level}</span>
+                  <div className="progress-bar flex-1" style={{ height: '8px' }}>
+                    <div
+                      className="progress-fill"
+                      style={{ width: `${(myLvInfo.winsInLevel / myLvInfo.winsForNext) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-bold text-purple-400">Lv.{myLvInfo.level + 1}</span>
                 </div>
-                <span className="text-sm font-bold text-purple-400">Lv.{Math.min(player.current_level + 1, 99)}</span>
+                <div className="text-xs text-purple-400 text-center">
+                  다음 레벨까지 {myLvInfo.winsForNext - myLvInfo.winsInLevel}승 ({myLvInfo.winsInLevel}/{myLvInfo.winsForNext})
+                </div>
               </div>
-              <div className="text-xs text-purple-400 text-center">
-                다음 레벨까지 {3 - (player.games_played % 3)}게임
-              </div>
-            </div>
+              );
+            })()}
           </div>
 
           {/* 메뉴 */}
@@ -520,7 +546,7 @@ export default function Home() {
                   <span className="text-2xl">{p.avatar_emoji}</span>
                   <div className="flex-1 min-w-0">
                     <span className="font-bold text-purple-700">{p.name}</span>
-                    <span className="text-xs text-purple-400 ml-2">Lv.{p.current_level}</span>
+                    <span className="text-xs text-purple-400 ml-2">{(() => { const m = getCurrentMilestone(computeLevel(p.games_won).level); return m ? `${m.badge} ` : ''; })()}Lv.{computeLevel(p.games_won).level}</span>
                   </div>
                   <div className="text-right text-xs">
                     <div className="font-bold text-yellow-500">{p.total_score}점</div>

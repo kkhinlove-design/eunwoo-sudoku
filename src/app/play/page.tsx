@@ -8,6 +8,7 @@ import SudokuBoard from '@/components/SudokuBoard';
 import Timer from '@/components/Timer';
 import Confetti from '@/components/Confetti';
 import { startBGM, stopBGM } from '@/lib/sounds';
+import { computeLevel, getCurrentMilestone, getBonusHints, getBonusMistakes, MILESTONES } from '@/lib/level';
 
 const DIFFICULTY_LABELS: Record<string, string> = {
   beginner: '입문 🌱',
@@ -78,16 +79,14 @@ function PlayContent() {
     if (!player) return;
 
     // 플레이어 통계 업데이트
+    const newWins = player.games_won + 1;
+    const { level: newLevel } = computeLevel(newWins);
     const updates: Record<string, unknown> = {
-      games_played: (player as unknown as Record<string, number>).games_played + 1,
-      games_won: (player as unknown as Record<string, number>).games_won + 1,
-      total_score: (player as unknown as Record<string, number>).total_score + totalScore,
+      games_played: player.games_played + 1,
+      games_won: newWins,
+      total_score: player.total_score + totalScore,
+      current_level: newLevel,
     };
-
-    // 레벨업: 3게임마다 (최대 99)
-    if ((updates.games_played as number) % 3 === 0 && player.current_level < 99) {
-      updates.current_level = Math.min(player.current_level + 1, 99);
-    }
 
     // 최고 기록 업데이트
     const bestKey = `best_time_${difficulty}` as string;
@@ -167,11 +166,16 @@ function PlayContent() {
   if (completed) {
     const mins = Math.floor(completionTime / 60);
     const secs = completionTime % 60;
-    const newGamesPlayed = player.games_played + 1;
-    const didLevelUp = newGamesPlayed % 3 === 0;
-    const newLevel = didLevelUp ? player.current_level + 1 : player.current_level;
-    const gamesInLevel = didLevelUp ? 0 : newGamesPlayed % 3;
-    const levelProgress = (gamesInLevel / 3) * 100;
+    const newWins = player.games_won + 1;
+    const oldInfo = computeLevel(player.games_won);
+    const newInfo = computeLevel(newWins);
+    const didLevelUp = newInfo.level > oldInfo.level;
+    const levelProgress = (newInfo.winsInLevel / newInfo.winsForNext) * 100;
+
+    // 마일스톤 달성 체크 (10단위)
+    const oldMilestone = Math.floor(oldInfo.level / 10) * 10;
+    const newMilestone = Math.floor(newInfo.level / 10) * 10;
+    const reachedMilestone = newMilestone > oldMilestone && newMilestone >= 10 ? MILESTONES[newMilestone] : null;
 
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -198,6 +202,20 @@ function PlayContent() {
             </div>
           </div>
 
+          {/* 마일스톤 달성 */}
+          {reachedMilestone && (
+            <div className="mb-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-xl p-4 animate-bounce-in">
+              <div className="text-3xl mb-1">{reachedMilestone.badge}</div>
+              <div className="text-lg font-black text-yellow-600">칭호 획득!</div>
+              <div className="text-xl font-bold text-purple-700 my-1">
+                &quot;{reachedMilestone.title}&quot;
+              </div>
+              <div className="text-sm text-orange-500 font-semibold mt-1">
+                보상: {reachedMilestone.reward}
+              </div>
+            </div>
+          )}
+
           {/* 레벨업 바 */}
           <div className="mb-6 px-2">
             {didLevelUp ? (
@@ -205,22 +223,22 @@ function PlayContent() {
                 <div className="text-2xl mb-1">🎖️</div>
                 <div className="text-lg font-bold text-yellow-600">레벨 업!</div>
                 <div className="text-3xl font-black text-purple-700 my-1">
-                  Lv.{player.current_level} → Lv.{newLevel}
+                  Lv.{oldInfo.level} → Lv.{newInfo.level}
                 </div>
                 <div className="progress-bar mt-2" style={{ height: '10px' }}>
                   <div
                     className="progress-fill"
-                    style={{ width: '100%', transition: 'width 1s ease' }}
+                    style={{ width: `${levelProgress}%`, transition: 'width 1s ease' }}
                   />
                 </div>
-                <div className="text-xs text-purple-400 mt-1">다음 레벨까지 3게임</div>
+                <div className="text-xs text-purple-400 mt-1">다음 레벨까지 {newInfo.winsForNext - newInfo.winsInLevel}승</div>
               </div>
             ) : (
               <div className="bg-purple-50 rounded-xl p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-bold text-purple-600">Lv.{newLevel}</span>
-                  <span className="text-xs text-purple-400">다음 레벨까지 {3 - gamesInLevel}게임</span>
-                  <span className="text-sm font-bold text-purple-400">Lv.{newLevel + 1}</span>
+                  <span className="text-sm font-bold text-purple-600">Lv.{newInfo.level}</span>
+                  <span className="text-xs text-purple-400">다음 레벨까지 {newInfo.winsForNext - newInfo.winsInLevel}승</span>
+                  <span className="text-sm font-bold text-purple-400">Lv.{newInfo.level + 1}</span>
                 </div>
                 <div className="progress-bar" style={{ height: '10px' }}>
                   <div
@@ -228,7 +246,7 @@ function PlayContent() {
                     style={{ width: `${levelProgress}%`, transition: 'width 1s ease' }}
                   />
                 </div>
-                <div className="text-xs text-purple-400 mt-1">{gamesInLevel}/3 게임 완료</div>
+                <div className="text-xs text-purple-400 mt-1">{newInfo.winsInLevel}/{newInfo.winsForNext}승 완료</div>
               </div>
             )}
           </div>
@@ -317,16 +335,24 @@ function PlayContent() {
         </div>
 
         {/* 레벨 바 */}
-        <div className="flex items-center gap-2 mb-3 px-1">
-          <span className="text-xs font-bold text-purple-600 shrink-0">Lv.{player.current_level}</span>
-          <div className="progress-bar flex-1" style={{ height: '8px' }}>
-            <div
-              className="progress-fill"
-              style={{ width: `${((player.games_played % 3) / 3) * 100}%` }}
-            />
-          </div>
-          <span className="text-xs font-bold text-purple-400 shrink-0">Lv.{player.current_level + 1}</span>
-        </div>
+        {(() => {
+          const info = computeLevel(player.games_won);
+          const milestone = getCurrentMilestone(info.level);
+          return (
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <span className="text-xs font-bold text-purple-600 shrink-0">
+                {milestone ? `${milestone.badge} ` : ''}Lv.{info.level}
+              </span>
+              <div className="progress-bar flex-1" style={{ height: '8px' }}>
+                <div
+                  className="progress-fill"
+                  style={{ width: `${(info.winsInLevel / info.winsForNext) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs font-bold text-purple-400 shrink-0">Lv.{info.level + 1}</span>
+            </div>
+          );
+        })()}
 
         {/* 보드 */}
         {puzzle && solution && (
@@ -335,6 +361,8 @@ function PlayContent() {
             solution={solution}
             onComplete={handleComplete}
             onGameOver={handleGameOver}
+            bonusHints={getBonusHints(computeLevel(player.games_won).level)}
+            bonusMistakes={getBonusMistakes(computeLevel(player.games_won).level)}
           />
         )}
       </div>

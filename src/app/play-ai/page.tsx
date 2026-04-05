@@ -8,6 +8,7 @@ import SudokuBoard from '@/components/SudokuBoard';
 import Timer from '@/components/Timer';
 import Confetti from '@/components/Confetti';
 import { startBGM, stopBGM } from '@/lib/sounds';
+import { computeLevel, getBonusHints, getBonusMistakes } from '@/lib/level';
 
 const DIFFICULTY_LABELS: Record<string, string> = {
   beginner: '입문 🌱',
@@ -167,15 +168,14 @@ function PlayAIContent() {
 
     if (!player) return;
 
+    const newWins = player.games_won + 1;
+    const { level: newLevel } = computeLevel(newWins);
     const updates: Record<string, unknown> = {
       games_played: player.games_played + 1,
-      games_won: player.games_won + 1,
+      games_won: newWins,
       total_score: player.total_score + totalScore,
+      current_level: newLevel,
     };
-
-    if ((updates.games_played as number) % 3 === 0 && player.current_level < 99) {
-      updates.current_level = Math.min(player.current_level + 1, 99);
-    }
 
     const bestKey = `best_time_${difficulty}` as string;
     const currentBest = (player as unknown as Record<string, number | null>)[bestKey];
@@ -419,6 +419,8 @@ function PlayAIContent() {
             onProgress={handleProgress}
             onComplete={handleComplete}
             onGameOver={handleGameOver}
+            bonusHints={getBonusHints(computeLevel(player.games_won).level)}
+            bonusMistakes={getBonusMistakes(computeLevel(player.games_won).level)}
           />
         )}
       </div>

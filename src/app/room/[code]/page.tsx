@@ -8,6 +8,7 @@ import SudokuBoard from '@/components/SudokuBoard';
 import Timer from '@/components/Timer';
 import Confetti from '@/components/Confetti';
 import { startBGM, stopBGM } from '@/lib/sounds';
+import { computeLevel } from '@/lib/level';
 
 interface Player {
   id: string;
@@ -312,10 +313,13 @@ function RoomContent({ params }: { params: Promise<{ code: string }> }) {
     const totalScore = diffBonus + timeBonus;
 
     // 승자 통계 업데이트
+    const newWins = (player as unknown as Record<string, number>).games_won + 1;
+    const { level: newLv } = computeLevel(newWins);
     await supabase.from('players').update({
       games_played: (player as unknown as Record<string, number>).games_played + 1,
-      games_won: (player as unknown as Record<string, number>).games_won + 1,
+      games_won: newWins,
       total_score: (player as unknown as Record<string, number>).total_score + totalScore,
+      current_level: newLv,
     }).eq('id', player.id);
 
     await supabase.from('game_history').insert({

@@ -17,6 +17,8 @@ interface SudokuBoardProps {
   onProgress?: (grid: Grid, pct: number) => void;
   onComplete?: (timeSeconds: number) => void;
   onGameOver?: (mistakes: number) => void;
+  bonusHints?: number;
+  bonusMistakes?: number;
 }
 
 function serializeMemos(memos: MemoGrid): number[][][] {
@@ -45,7 +47,7 @@ function checkLineCompletion(grid: Grid, solution: Grid, row: number, col: numbe
   return rowComplete || colComplete || boxComplete;
 }
 
-export default function SudokuBoard({ puzzle, solution, onProgress, onComplete, onGameOver }: SudokuBoardProps) {
+export default function SudokuBoard({ puzzle, solution, onProgress, onComplete, onGameOver, bonusHints = 0, bonusMistakes = 0 }: SudokuBoardProps) {
   const [grid, setGrid] = useState<Grid>(() => puzzle.map(row => [...row]));
   const [selected, setSelected] = useState<[number, number] | null>(null);
   const [errors, setErrors] = useState<Set<string>>(new Set());
@@ -64,12 +66,12 @@ export default function SudokuBoard({ puzzle, solution, onProgress, onComplete, 
 
   // 새 기능: 힌트 횟수
   const [hintsUsed, setHintsUsed] = useState(0);
-  const MAX_HINTS = 3;
+  const MAX_HINTS = 3 + bonusHints;
 
   // 새 기능: 실수 카운트
   const [mistakes, setMistakes] = useState(0);
   const [gameOver, setGameOver] = useState(false);
-  const MAX_MISTAKES = 7;
+  const MAX_MISTAKES = 7 + bonusMistakes;
 
   // 남은 숫자 카운트
   const getNumberCounts = useCallback(() => {
