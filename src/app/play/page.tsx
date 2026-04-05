@@ -8,7 +8,7 @@ import SudokuBoard from '@/components/SudokuBoard';
 import Timer from '@/components/Timer';
 import Confetti from '@/components/Confetti';
 import { startBGM, stopBGM } from '@/lib/sounds';
-import { computeLevel, getCurrentMilestone, getBonusHints, getBonusMistakes, MILESTONES } from '@/lib/level';
+import { computeLevel, getCurrentMilestone, MILESTONES } from '@/lib/level';
 
 const DIFFICULTY_LABELS: Record<string, string> = {
   beginner: '입문 🌱',
@@ -210,9 +210,6 @@ function PlayContent() {
               <div className="text-xl font-bold text-purple-700 my-1">
                 &quot;{reachedMilestone.title}&quot;
               </div>
-              <div className="text-sm text-orange-500 font-semibold mt-1">
-                보상: {reachedMilestone.reward}
-              </div>
             </div>
           )}
 
@@ -361,8 +358,6 @@ function PlayContent() {
             solution={solution}
             onComplete={handleComplete}
             onGameOver={handleGameOver}
-            bonusHints={getBonusHints(computeLevel(player.games_won).level)}
-            bonusMistakes={getBonusMistakes(computeLevel(player.games_won).level)}
           />
         )}
       </div>

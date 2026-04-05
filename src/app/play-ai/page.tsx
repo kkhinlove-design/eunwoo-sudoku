@@ -8,7 +8,7 @@ import SudokuBoard from '@/components/SudokuBoard';
 import Timer from '@/components/Timer';
 import Confetti from '@/components/Confetti';
 import { startBGM, stopBGM } from '@/lib/sounds';
-import { computeLevel, getBonusHints, getBonusMistakes } from '@/lib/level';
+import { computeLevel } from '@/lib/level';
 
 const DIFFICULTY_LABELS: Record<string, string> = {
   beginner: '입문 🌱',
@@ -419,8 +419,6 @@ function PlayAIContent() {
             onProgress={handleProgress}
             onComplete={handleComplete}
             onGameOver={handleGameOver}
-            bonusHints={getBonusHints(computeLevel(player.games_won).level)}
-            bonusMistakes={getBonusMistakes(computeLevel(player.games_won).level)}
           />
         )}
       </div>
