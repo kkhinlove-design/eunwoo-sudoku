@@ -70,3 +70,17 @@ CREATE POLICY "public_game_history" ON game_history FOR ALL USING (true) WITH CH
 -- Realtime 활성화
 ALTER PUBLICATION supabase_realtime ADD TABLE room_players;
 ALTER PUBLICATION supabase_realtime ADD TABLE rooms;
+
+-- 친구 메시지 테이블 (이야기 나누기)
+CREATE TABLE IF NOT EXISTS friend_messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  from_player_id UUID NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  to_player_id UUID NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_friend_messages_to ON friend_messages(to_player_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_friend_messages_pair ON friend_messages(from_player_id, to_player_id, created_at DESC);
+ALTER TABLE friend_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public_friend_messages" ON friend_messages FOR ALL USING (true) WITH CHECK (true);
+ALTER PUBLICATION supabase_realtime ADD TABLE friend_messages;

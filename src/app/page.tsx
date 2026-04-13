@@ -184,6 +184,22 @@ export default function Home() {
     router.push(`/play-ai?player=${player.id}`);
   };
 
+  // 이야기 나누기
+  const handleOpenMessages = (e: React.MouseEvent, p: Player) => {
+    e.stopPropagation();
+    const savedId = localStorage.getItem('sudoku_player_id');
+    const senderId = player?.id || savedId;
+    if (!senderId) {
+      alert('먼저 내 이름을 골라서 접속해줘!');
+      return;
+    }
+    if (senderId === p.id) {
+      alert('자기 자신에게는 메시지를 보낼 수 없어요!');
+      return;
+    }
+    router.push(`/messages/${p.id}`);
+  };
+
   // 로그아웃
   const handleLogout = () => {
     setPlayer(null);
@@ -345,6 +361,13 @@ export default function Home() {
                     </div>
                       );
                     })()}
+                  </button>
+                  {/* 이야기 나누기 버튼 */}
+                  <button
+                    onClick={(e) => handleOpenMessages(e, p)}
+                    className="mt-2 w-full py-2 rounded-xl bg-gradient-to-r from-pink-100 to-purple-100 text-purple-600 hover:from-pink-200 hover:to-purple-200 text-sm font-bold transition-all"
+                  >
+                    💬 {p.name}에게 이야기 나누기
                   </button>
                   {/* 수정/삭제 버튼 */}
                   {editingPlayer === p.id ? (
@@ -540,6 +563,15 @@ export default function Home() {
                     p.id === player.id ? 'bg-purple-100 border-2 border-purple-300' : 'bg-gray-50'
                   }`}
                 >
+                  {p.id !== player.id && (
+                    <button
+                      onClick={(e) => handleOpenMessages(e, p)}
+                      className="order-last w-9 h-9 rounded-full bg-pink-100 text-pink-500 hover:bg-pink-200 hover:text-pink-700 flex items-center justify-center text-lg shrink-0"
+                      title={`${p.name}에게 이야기 나누기`}
+                    >
+                      💬
+                    </button>
+                  )}
                   <span className="text-lg w-6 text-center">
                     {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`}
                   </span>
