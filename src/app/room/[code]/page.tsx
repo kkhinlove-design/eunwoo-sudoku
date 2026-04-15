@@ -308,9 +308,10 @@ function RoomContent({ params }: { params: Promise<{ code: string }> }) {
 
     const currentRoom = roomRef.current;
     const diff = currentRoom?.difficulty || 'easy';
-    const diffBonus = diff === 'beginner' ? 80 : diff === 'easy' ? 150 : diff === 'medium' ? 300 : 500;
-    const timeBonus = Math.max(0, 300 - timeSeconds);
-    const totalScore = diffBonus + timeBonus;
+    const diffBonus = diff === 'beginner' ? 40 : diff === 'easy' ? 80 : diff === 'medium' ? 160 : 240;
+    const timeBonus = Math.max(0, 180 - timeSeconds);
+    const winBonus = 80;
+    const totalScore = diffBonus + timeBonus + winBonus;
 
     // 승자 통계 업데이트
     const newWins = (player as unknown as Record<string, number>).games_won + 1;

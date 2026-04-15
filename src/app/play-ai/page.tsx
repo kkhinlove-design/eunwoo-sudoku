@@ -160,10 +160,11 @@ function PlayAIContent() {
     }
 
     // 점수 계산
-    const diffBonus = difficulty === 'beginner' ? 50 : difficulty === 'easy' ? 100 : difficulty === 'medium' ? 200 : 300;
-    const aiBonus = aiLevel === 'baby' ? 50 : aiLevel === 'student' ? 100 : aiLevel === 'genius' ? 200 : 300;
-    const timeBonus = Math.max(0, 300 - timeSeconds);
-    const totalScore = diffBonus + aiBonus + timeBonus;
+    const diffBonus = difficulty === 'beginner' ? 25 : difficulty === 'easy' ? 50 : difficulty === 'medium' ? 100 : 150;
+    const aiBonus = aiLevel === 'baby' ? 25 : aiLevel === 'student' ? 50 : aiLevel === 'genius' ? 100 : 150;
+    const timeBonus = Math.max(0, 150 - timeSeconds);
+    const winBonus = 50;
+    const totalScore = diffBonus + aiBonus + timeBonus + winBonus;
     setScore(totalScore);
 
     if (!player) return;
@@ -203,8 +204,15 @@ function PlayAIContent() {
 
     if (!player) return;
 
+    // 패배 위로 점수: (난이도 + AI 보너스)의 40%
+    const diffBonus = difficulty === 'beginner' ? 25 : difficulty === 'easy' ? 50 : difficulty === 'medium' ? 100 : 150;
+    const aiBonus = aiLevel === 'baby' ? 25 : aiLevel === 'student' ? 50 : aiLevel === 'genius' ? 100 : 150;
+    const consolation = Math.round((diffBonus + aiBonus) * 0.4);
+    setScore(consolation);
+
     await supabase.from('players').update({
       games_played: player.games_played + 1,
+      total_score: player.total_score + consolation,
     }).eq('id', player.id);
 
     await supabase.from('game_history').insert({
@@ -212,9 +220,9 @@ function PlayAIContent() {
       difficulty,
       completion_time: null,
       is_winner: false,
-      score: 0,
+      score: consolation,
     });
-  }, [difficulty, player]);
+  }, [difficulty, aiLevel, player]);
 
   if (!player) return null;
 
