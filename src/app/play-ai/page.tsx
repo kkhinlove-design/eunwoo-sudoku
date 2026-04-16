@@ -160,10 +160,10 @@ function PlayAIContent() {
     }
 
     // 점수 계산
-    const diffBonus = difficulty === 'beginner' ? 25 : difficulty === 'easy' ? 50 : difficulty === 'medium' ? 100 : 150;
-    const aiBonus = aiLevel === 'baby' ? 25 : aiLevel === 'student' ? 50 : aiLevel === 'genius' ? 100 : 150;
-    const timeBonus = Math.max(0, 150 - timeSeconds);
-    const winBonus = 50;
+    const diffBonus = difficulty === 'beginner' ? 50 : difficulty === 'easy' ? 75 : difficulty === 'medium' ? 125 : 175;
+    const aiBonus = aiLevel === 'baby' ? 50 : aiLevel === 'student' ? 75 : aiLevel === 'genius' ? 125 : 175;
+    const timeBonus = Math.max(0, 175 - timeSeconds);
+    const winBonus = 75;
     const totalScore = diffBonus + aiBonus + timeBonus + winBonus;
     setScore(totalScore);
 
@@ -205,8 +205,8 @@ function PlayAIContent() {
     if (!player) return;
 
     // 패배 위로 점수: (난이도 + AI 보너스)의 40%
-    const diffBonus = difficulty === 'beginner' ? 25 : difficulty === 'easy' ? 50 : difficulty === 'medium' ? 100 : 150;
-    const aiBonus = aiLevel === 'baby' ? 25 : aiLevel === 'student' ? 50 : aiLevel === 'genius' ? 100 : 150;
+    const diffBonus = difficulty === 'beginner' ? 50 : difficulty === 'easy' ? 75 : difficulty === 'medium' ? 125 : 175;
+    const aiBonus = aiLevel === 'baby' ? 50 : aiLevel === 'student' ? 75 : aiLevel === 'genius' ? 125 : 175;
     const consolation = Math.round((diffBonus + aiBonus) * 0.4);
     setScore(consolation);
 

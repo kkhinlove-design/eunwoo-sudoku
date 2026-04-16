@@ -71,8 +71,8 @@ function PlayContent() {
     setCompletionTime(timeSeconds);
 
     // 점수 계산: 난이도 보너스 + 시간 보너스
-    const diffBonus = difficulty === 'beginner' ? 25 : difficulty === 'easy' ? 50 : difficulty === 'medium' ? 100 : 150;
-    const timeBonus = Math.max(0, 150 - timeSeconds);
+    const diffBonus = difficulty === 'beginner' ? 50 : difficulty === 'easy' ? 75 : difficulty === 'medium' ? 125 : 175;
+    const timeBonus = Math.max(0, 175 - timeSeconds);
     const totalScore = diffBonus + timeBonus;
     setScore(totalScore);
 
